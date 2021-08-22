@@ -22,3 +22,4 @@ Homestead.json
 # PHP Unit Testing
 .phpunit.result.cache
 
+.DS_Store
