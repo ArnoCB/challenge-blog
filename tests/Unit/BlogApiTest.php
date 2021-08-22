@@ -15,7 +15,6 @@ class BlogApiTest extends TestCase
 
     public string $user;
     public string $password;
-    public string $token;
 
     public function setUp(): void
     {
@@ -57,10 +56,11 @@ class BlogApiTest extends TestCase
                 "expires_in"
             ])->getContent();
 
-        $this->token = json_decode($content, true)['access_token'];
+        $token = json_decode($content, true)['access_token'];
+        $bearer_token_header = ['Authorization' => "Bearer " . $token];
 
         // test logout
-        $this->json('post', '/logout', ['token' => $this->token])
+        $this->json('post', '/logout', [], $bearer_token_header)
             ->assertStatus(Response::HTTP_OK)
             ->assertExactJson([
                 "message" => "Successfully logged out"
@@ -77,19 +77,19 @@ class BlogApiTest extends TestCase
         $content = $this->json('post', '/register', $payload)
             ->getContent();
 
-        $this->token = json_decode($content, true)['access_token'];
+        $token = json_decode($content, true)['access_token'];
+        $bearer_token_header = ['Authorization' => "Bearer " . $token];
 
         $faker = Factory::create();
 
         $payload = [
             "title" => "this is a blog post",
             "summary" => $faker->text(),
-            "content" => $faker->text(),
-            "token" => $this->token
+            "content" => $faker->text()
         ];
 
         // test make blog post
-        $this->json('post', '/blogs', $payload)
+        $this->json('post', '/blogs', $payload, $bearer_token_header)
             ->assertStatus(Response::HTTP_CREATED)
             ->assertExactJson([
                 "slug" => "this-is-a-blog-post"
@@ -97,7 +97,7 @@ class BlogApiTest extends TestCase
             ->getContent();
 
         // test list blog posts
-        $this->json('get', '/blogs',  ['token' => $this->token])
+        $this->json('get', '/blogs', [], $bearer_token_header)
             ->assertStatus(Response::HTTP_OK)
             ->assertJsonStructure([
                 '*' => [
@@ -109,16 +109,15 @@ class BlogApiTest extends TestCase
 
         // update the blog title
         $payload = [
-            "title" => "This is a new title",
-            "token" => $this->token
+            "title" => "This is a new title"
         ];
 
-        $this->json('patch', '/blogs/' . "this-is-a-blog-post", $payload)
+        $this->json('patch', '/blogs/' . "this-is-a-blog-post", $payload, $bearer_token_header)
             ->assertStatus(Response::HTTP_OK)
             ->assertExactJson(['message' => 'Article updated']);
 
         // test get single blog post
-        $content = $this->json('get', '/blogs/' . "this-is-a-blog-post", ['token' => $this->token])
+        $content = $this->json('get', '/blogs/' . "this-is-a-blog-post", [], $bearer_token_header)
             ->assertStatus(Response::HTTP_OK)
             ->assertJsonStructure([
                 'title',
@@ -132,7 +131,7 @@ class BlogApiTest extends TestCase
         $this->assertEquals(json_decode($content, true)['title'], "This is a new title" );
 
         // test get delete blog post
-        $this->json('delete', '/blogs/' . "this-is-a-blog-post", ['token' => $this->token])
+        $this->json('delete', '/blogs/' . "this-is-a-blog-post", [], $bearer_token_header)
             ->assertStatus(Response::HTTP_OK)
             ->assertExactJson(['message' => 'Article deleted']);
     }
