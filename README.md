@@ -8,3 +8,4 @@ This is a solution to the Voclarion Developer exercise to create a simple Blog A
     - (The external database port is set to 3310)
 2. There is a PHPUnit test to test the API: 
     - tests/Unit/BlogApiTest.php
+3. For now the API is hosted on 142.93.128.14
